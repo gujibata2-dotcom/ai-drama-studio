@@ -1,25 +1,46 @@
 import { NextResponse } from "next/server";
 import { startVeoGeneration } from "../../../lib/veo";
 
+export const runtime = "nodejs";
+
+const MAX_BODY_BYTES = 32_000;
+const MAX_PROMPT_LENGTH = 4_000;
+
+function json(data: unknown, status = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: { "Cache-Control": "no-store" }
+  });
+}
+
 export async function POST(request: Request) {
   try {
     if (process.env.ENABLE_VEO_GENERATION !== "true") {
-      return NextResponse.json(
-        { error: "Veo generation is disabled. Set ENABLE_VEO_GENERATION=true after testing billing." },
-        { status: 403 }
+      return json(
+        { error: "Veo generation is disabled by the server administrator." },
+        403
       );
+    }
+
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > MAX_BODY_BYTES) {
+      return json({ error: "Request is too large." }, 413);
     }
 
     const body = await request.json();
     const prompt = String(body.prompt || "").trim();
+
     if (!prompt) {
-      return NextResponse.json({ error: "Missing video prompt" }, { status: 400 });
+      return json({ error: "Missing video prompt" }, 400);
+    }
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      return json({ error: "Video prompt is too long." }, 400);
     }
 
     const operation = await startVeoGeneration(prompt);
-    return NextResponse.json({ operation });
+    return json({ operation });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("generate-video failed", error);
+    return json({ error: "Video generation failed. Please try again." }, 500);
   }
 }
