@@ -1,46 +1,73 @@
 # AI Drama Studio
 
-MVP สำหรับสร้างละคร AI จากไอเดียเดียว โดยวาง pipeline:
+AI drama production MVP:
 
-Story → Script → Characters → Scenes → Shots → Video → Thai TTS → Lip Sync → Final Edit
+Story → Gemini Script → Character Bible → Scenes → Shots → Veo → Audio → Final Edit
 
-## MVP
+## What works now
 
-หน้าเว็บปัจจุบันรองรับ:
-- ตั้งชื่อเรื่อง
-- เลือกความยาว 1 / 5 / 30 นาที
-- เลือกภาษา
-- เลือก visual style
-- ประเมินจำนวนช็อต
-- แสดง production pipeline แบบ mock
+- Next.js UI for title, duration, language and visual style
+- Server-side Gemini API integration
+- Gemini returns structured Character Bible + Scenes + Shots
+- Supabase schema for projects / characters / scenes / shots
+- Veo 3.1 adapter and API route
+- Veo has a safety switch and is OFF by default to prevent accidental paid generations
 
-## Run locally
+## Required credentials
+
+### 1. Gemini API key
+Create a key in Google AI Studio. Put it in your local/deployment environment as:
+
+```
+GEMINI_API_KEY=...
+```
+
+Never put the real key in source code or commit it to GitHub.
+
+The same Gemini credential is used by the Veo adapter when the account/project has access.
+
+### 2. Supabase
+Set:
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Run `supabase/schema.sql` in Supabase SQL Editor.
+
+## Veo
+
+Default model:
+
+```
+VEO_MODEL=veo-3.1-fast-generate-preview
+ENABLE_VEO_GENERATION=false
+```
+
+Keep video generation disabled while testing script generation. When billing/access is confirmed, change the deployment secret to:
+
+```
+ENABLE_VEO_GENERATION=true
+```
+
+Start with ONE shot before generating a full drama.
+
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-เปิด http://localhost:3000
+Open http://localhost:3000
 
-## Supabase
+## Next
 
-1. สร้าง Supabase project
-2. เปิด SQL Editor
-3. รันไฟล์ `supabase/schema.sql`
-4. คัดลอก `.env.example` เป็น `.env.local`
-5. ใส่ URL และ anon key ของ Supabase
-
-## Roadmap
-
-1. Persist projects to Supabase
-2. Connect Script AI
-3. Generate Character Bible + reference images
-4. Generate scenes and 5–10 second shots
-5. Connect video generation provider
-6. Thai TTS + character voice IDs
-7. Lip-sync
-8. FFmpeg final assembly
-9. Export MP4
-
-> Do not commit real API keys to GitHub.
+1. Add GEMINI_API_KEY and verify 1-minute script generation
+2. Persist generated plan to Supabase
+3. Generate character reference images
+4. Test one Veo shot
+5. Add operation polling/download/storage
+6. Evaluate native Thai audio; add dedicated TTS only if needed
+7. Add final assembly/export
