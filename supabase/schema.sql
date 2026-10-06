@@ -47,3 +47,10 @@ create table if not exists shots (
 create index if not exists characters_project_id_idx on characters(project_id);
 create index if not exists scenes_project_id_idx on scenes(project_id);
 create index if not exists shots_scene_id_idx on shots(scene_id);
+
+-- Safe default: browser/anon clients receive no table access until explicit
+-- policies are added together with authentication/ownership.
+alter table projects enable row level security;
+alter table characters enable row level security;
+alter table scenes enable row level security;
+alter table shots enable row level security;
